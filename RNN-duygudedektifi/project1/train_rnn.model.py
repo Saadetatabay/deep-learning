@@ -23,3 +23,22 @@ index_word = {v: k for k, v in word_index.items()} # indeks kelimeye dönüştü
 decoded = " ".join([index_word.get(i-3,"?") for i in x_train[0]])
 
 print("Decoded review:", decoded)
+
+# veri ön işleme
+
+# sayıları kelimelere dönüştür
+def preprocess_review(encoded_review):
+    words =  [index_word.get(i-3,"?") for i in encoded_review if i > 3]
+    # stopword'leri kaldır
+    words = [word.lower() for word in words if word not in stop_words and word.isalpha() ]
+    # kelimeleri indekslere dönüştür
+    return [word_index.get(word, 0) for word in words]
+
+#veriyi temizle
+X_train = [preprocess_review(review) for review in x_train]
+X_test = [preprocess_review(review) for review in x_test]
+
+# RNN sabit uzunlukta girdi bekler, bu yüzden veriyi pad ediyoruz
+maxlen = 200  # maksimum kelime sayısı
+X_train = pad_sequences(X_train, maxlen=maxlen)
+X_test = pad_sequences(X_test, maxlen=maxlen)
