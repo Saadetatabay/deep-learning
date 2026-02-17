@@ -39,6 +39,20 @@ X_train = [preprocess_review(review) for review in x_train]
 X_test = [preprocess_review(review) for review in x_test]
 
 # RNN sabit uzunlukta girdi bekler, bu yüzden veriyi pad ediyoruz
-maxlen = 200  # maksimum kelime sayısı
+maxlen = 500  # maksimum kelime sayısı
 X_train = pad_sequences(X_train, maxlen=maxlen)
 X_test = pad_sequences(X_test, maxlen=maxlen)
+
+#model oluşturma
+model = Sequential() # sıralı model oluştur
+
+#max_feauters kaç farklı kelime olduğunu belirtir, output_dim gömülü vektörün boyutunu belirtir her kelime 32 boyutlu vektör
+#input_length ise her girdi dizisinin uzunluğunu belirtir
+#keliemleri vektörlere dönüştürmek için embedding katmanı ekle
+model.add(Embedding(input_dim=max_features, output_dim=32, input_length=maxlen)) # embedding katmanı ekle
+
+# basit bir RNN katmanı ekle
+model.add(SimpleRNN(32)) # 32 nöronlu RNN katmanı
+
+# çıktı katmanı ekle sigmoid 0-1 arasında değer döndürür
+model.add(Dense(1, activation='sigmoid')) # ikili sınıflandırma için
