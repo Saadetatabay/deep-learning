@@ -1,5 +1,6 @@
 import numpy as np
 import nltk
+import matplotlib.pyplot as plt
 from nltk.corpus import stopwords
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
@@ -64,3 +65,40 @@ model.add(Dense(1, activation='sigmoid')) # ikili sınıflandırma için
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 print(model.summary())
 
+#modeli eğit
+# epochs: tüm eğitim verisi üzerinde kaç kez geçileceği batch_size: 50.000 yorum 64lük gruplara bölünür ve her grup model tarafından işlenir validation_split: eğitim verisinin %20'si doğrulama için ayrılır
+history = model.fit(X_train, y_train, epochs=2, batch_size=64, validation_split=0.2)
+#history bir python nesnesidir ve modelin eğitimi sırasında kaydedilen metrikleri içerir.
+# history.history['accuracy'] eğitim doğruluğu
+# history.history['val_accuracy'] görülmemiş verideki doğruluk
+# history.history['loss'] eğitim versinde hata
+# history.history['val_loss'] görülmemiş verideki hata
+
+# modeli değerlendir
+def plot_history(history):
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['accuracy'], label='Training Accuracy')
+    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    plt.title('Model Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Model Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+plot_history(history)
+
+#test verisi üzerinde modeli değerlendir
+loss, accuracy = model.evaluate(X_test, y_test) 
+print(f'Test Loss: {loss:.4f}, Test Accuracy: {accuracy:.4f}')
+
+#modeli kaydet
+model.save('rnn_model.h5')
+print("Model saved as rnn_model.h5")
