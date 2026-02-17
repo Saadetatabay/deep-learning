@@ -17,24 +17,31 @@ max_features = 10000  # en sık kullanılan 10.000 kelime
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=max_features) # sayısallaştırılmış veriyi yükle
 
 # sayıları kelimelere dönüştür
-word_index = imdb.get_word_index() # kelime indeksini al "the":1 
-index_word = {v: k for k, v in word_index.items()} # indeks kelimeye dönüştür "1":"the"
+original_word_index = imdb.get_word_index() # kelime indeksini al "the":1 
+index_to_word = {k+3: v for v,k in original_word_index.items()} # indeks kelimeye dönüştür "1":"the"
+index_to_word[0] = "<PAD>"
+index_to_word[1] = "<START>"
+index_to_word[2] = "<UNK>"
 
 # 3 çıkarmamızın sebebi, 0, 1, 2'nin özel karakterler için ayrılmış olmasıdır.
-decoded = " ".join([index_word.get(i-3,"?") for i in x_train[0]])
+def decode_review(encoded_review):
+    return " ".join([index_to_word.get(i, "?") for i in encoded_review])
 
-print("Decoded review:", decoded)
+print("Encoded review:", x_train[0])  # ilk yorumu sayısal olarak yazdır
+print("Decoded review:", decode_review(x_train[0]))  # ilk yorumu çözümlendir ve yazdır
 
 # veri ön işleme
 
 # sayıları kelimelere dönüştür
-def preprocess_review(encoded_review):
-    words =  [index_word.get(i-3,"?") for i in encoded_review if i > 3]
-    # stopword'leri kaldır
-    words = [word.lower() for word in words if word not in stop_words and word.isalpha() ]
-    # kelimeleri indekslere dönüştür
-    return [word_index.get(word, 0) for word in words]
+word_to_index = {v: k for k,v in index_to_word.items()} # kelime indeksine dönüştür "the":1
 
+def preprocess_review(encoded_review):
+    #sayıları kelimelere dönüştür
+    words =  [index_to_word.get(i, "?") for i in encoded_review if i > 3]
+    # stopword'leri kaldır
+    cleaned_words = [word.lower() for word in words if word.isalpha() and word.lower() not in stop_words]
+    # kelimeleri indekslere dönüştür
+    return [word_to_index.get(word, 2) for word in cleaned_words]
 #veriyi temizle
 X_train = [preprocess_review(review) for review in x_train]
 X_test = [preprocess_review(review) for review in x_test]
