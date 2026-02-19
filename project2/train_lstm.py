@@ -162,3 +162,32 @@ model.add(Dense(eşsiz_kelimeler+1, activation='softmax')) # çıktı
 
 #loss da hata hesaplanır ve modelin çıktısı ile gerçek çıktı arasındaki farkı minimize etmeye çalışırız adam optimizasyon algoritmasıyla ağırlıkları güncelleriz
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+#X bağımsız değişkenler y bağımlı değişkenler
+#epochs kaç kez tüm veri seti üzerinde eğitim yapılacağını belirtir verbose ise eğitim sırasında bilgi vermesini sağlar
+model.fit(X, y, epochs=100, verbose=1)
+
+def generate_text(seed_text, next_words):
+    for _ in range(next_words):
+        # seed metni sayısal dizilere dönüştür
+        # seed_text: "bugün hava"
+        #text_to_sequence nested list döndürür [[1, 2]] o yüzden [0] ile ilk elemanı alırız
+        token_list = tokenizer.texts_to_sequences([seed_text])[0]
+        # diziyi modelin beklediği forma getir
+        # başa 0 lar eklendi
+        token_list = pad_sequences([token_list], maxlen=max_seq_length, padding='pre')
+        # tahmin yap
+        predicted = model.predict(token_list, verbose=0)
+        # en yüksek olasılığa sahip kelimenin indeksini al
+        # axis=-1 demek her sütun içinde en yüksek değeri bul demektir
+        predicted_index = np.argmax(predicted, axis=-1)[0] #[85] olur biz elemanı 85 alırız
+        # indeksle eşleşen kelimeyi bul
+        output_word = tokenizer.index_word.get(predicted_index)
+        # seed metne tahmin edilen kelimeyi ekle
+        seed_text += " " + output_word
+    return seed_text
+
+# örnek kullanım
+seed_text = "bugün hava"
+generated_text = generate_text(seed_text, next_words=5)
+print(generated_text)
