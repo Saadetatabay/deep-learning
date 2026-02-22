@@ -54,6 +54,51 @@ print("Örnek eğitim verisi (padded):", X_train[0])
 print("Örnek eğitim etiketi (ölçeklendirilmiş):", y_train[0])
 
 
-# model = Sequential()
-# model.add(Embedding(input_dim=10000, output_dim=64, input_length=100)) # embedding katmanı ekle
-# model.add(LSTM(64)) # 64 nöronlu LSTM katmanı ek
+model = Sequential()
+#input_dim kaç tane eşsiz kelime olduğunu belirtir
+#output_dim gömülü vektörün boyutunu belirtir her kelime 64 boyutlu vektör
+#input_length ise her girdi dizisinin uzunluğunu belirtir padded_sequences ile 100 yaptık
+#keliemleri vektörlere dönüştürmek için embedding katmanı ekle
+model.add(Embedding(input_dim=10000, output_dim=64, input_length=100)) # embedding katmanı ekle
+
+# bunun sonucunda 128 tane sayıdan oluşan bir özet vektör elde ederiz
+# return_sequences=True yaparsak her kelime için bir özet vektör döndürür 
+model.add(LSTM(128)) # 64 nöronlu LSTM katmanı ek
+
+# 64 nöronlu bir çıktı katmanı ekle
+# her bir nöron farklı bir özellik öğrenir ve bu özelliklerin kombinasyonu bize tahmin yaparken yardımcı olur
+# relu aktivasyon fonksiyonu, negatif değerleri sıfırlar ve pozitif değerleri olduğu gibi bırakır, bu da modelin daha karmaşık ilişkileri öğrenmesine yardımcı olur
+# relu hızlıdır ve vanishing gradient problem'ini azaltır, bu da derin ağlarda daha iyi performans sağlar
+# ara katman olarak eklediğimiz için modelin öğrenme kapasitesini artırır ve daha karmaşık ilişkileri öğrenmesine yardımcı olur
+model.add(Dense(64, activation='relu')) # çıktı katmanı ekle
+
+# relu tanh ara katman
+# softmax (çok sınıflı) ve sigmoid (iki sınıflı) sınıflandırma
+
+
+# tek bir nöronlu çıktı katmanı ekle
+model.add(Dense(1)) # tek bir nöronlu çıktı katmanı ekle
+
+# biz sınıflandırma yapmıyoruz, regresyon yapıyoruz, bu yüzden kayıp fonksiyonu olarak MeanSquaredError kullanıyoruz
+# metric de accuracy değil MeanAbsoluteError kullanıyoruz çünkü regresyon problemlerinde doğruluk yerine hata ölçümleri daha anlamlıdır
+model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=[MeanAbsoluteError()])
+
+# epochs: tüm eğitim verisi üzerinde kaç kez geçileceği batch_size: 50.000 yorum 64lük gruplara bölünür ve her grup model tarafından işlenir validation_split: eğitim verisinin %20'si doğrulama için ayrılır
+# her 64 yorumda bir modelin doğruluğunu ve kaybını hesaplar
+history = model.fit(X_train, y_train, epochs=3, batch_size=64, validation_split=0.2)
+# history nesnesinin içinde :
+#    loss her epoch daki hata değeri(MeanSquaredError)
+#    val_loss her epoch daki doğrulama hata değeri(MeanSquaredError) modedlin hiç görmediği veri
+
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+
+# plotlama ile overfitting olup olmadığını görebiliriz
+# eğer eğitim kaybı sürekli azalırken doğrulama kaybı artmaya başlarsa model overfitting yapıyor demektir
+plt.title('Model Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss mean squared error')
+plt.legend()
+plt.show()
+model.save('lstm_model.h5')
+
