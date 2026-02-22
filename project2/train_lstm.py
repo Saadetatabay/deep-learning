@@ -188,6 +188,6 @@ def generate_text(seed_text, next_words):
     return seed_text
 
 # örnek kullanım
-seed_text = "bugün hava"
+seed_text = "bugün"
 generated_text = generate_text(seed_text, next_words=5)
 print(generated_text)
