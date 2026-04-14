@@ -4,22 +4,38 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_classic.memory import ConversationBufferMemory
 from langchain_classic.chains.conversation.base import ConversationChain
+from langchain_classic.prompts import PromptTemplate
 
 load_dotenv()
 api_key = os.getenv("API_KEY")
-print("API KEY:", api_key)  # API anahtarını kontrol etmek için ekledim
+
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     google_api_key=api_key,
 )
-memory = ConversationBufferMemory(return_messages=True)
-conversation = ConversationChain(llm=llm, memory=memory)
 
 name = input("What is your name? ") 
 age = input("What is your age? ")
-intro = (f"sen bir doktor asistanısın.hastanın adı {name} ve yaşı {age}.hastaya yaşına uygun ismiyle hitap ederek sorular sorarak hastanın sağlık durumunu anlamaya çalışıyorsun. Hastanın verdiği cevaplara göre ona uygun tavsiyelerde bulunuyorsun.")
 
-memory.chat_memory.add_user_message(intro)
+template = f"""Sen profesyonel bir doktor asistanısın. 
+Hastanın adı {name} ve yaşı {age}. 
+Hastaya yaşına uygun bir şekilde ({name} Bey/Hanım veya sadece {name} diyerek) hitap etmelisin.
+Görevin: Sorular sorarak hastanın sağlık durumunu anlamaya çalışmak ve verdiği cevaplara göre uygun tavsiyelerde bulunmaktır.
+
+Önemli Kurallar:
+- Tıbbi bir tanı koyma, sadece tavsiye ver.
+- Her zaman nazik ve empatik ol.
+- Gerektiğinde bir doktora görünmesini hatırlat.
+
+Geçmiş Konuşmalar:
+{{history}}
+
+Hasta: {{input}}
+Doktor Asistanı:"""
+
+prompt = PromptTemplate(input_variables=["history","input"],template=template)
+memory = ConversationBufferMemory(ai_prefix="Doktor Asistanı",human_prefix="Hasta")
+conversation = ConversationChain(prompt=prompt,llm=llm, memory=memory)
 
 print("Merhaba, ben doktor asistanınızım. Size nasıl yardımcı olabilirim?")
 

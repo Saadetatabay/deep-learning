@@ -27,4 +27,3 @@ while True:
             print(f"Hata: {response.status_code} - {response.text}")
     except requests.exceptions.RequestException as e:
         print(f"İstek hatası: {e}")
-        
